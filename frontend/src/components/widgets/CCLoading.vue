@@ -1,18 +1,27 @@
 <template>
-  <CustomIcon class="loading-icon" :type="icon" :size="size" rightMargin />
+  <CustomIcon v-if="icon" class="loading-icon" :type="icon" :size="size" rightMargin />
+  <img v-else class="loading-icon loading-brand-logo" :src="brandLogoUrl" :alt="brandName" :style="{ width: size }" />
 </template>
 
 <script>
+import { BRAND_LOGO_URL, BRAND_NAME } from '@/const/brand';
+
 export default {
   props: {
     icon: {
       type: String,
-      default: 'icon-v2-logo-DM'
+      default: ''
     },
     size: {
       type: String,
       default: '80px'
     }
+  },
+  data() {
+    return {
+      brandLogoUrl: BRAND_LOGO_URL,
+      brandName: BRAND_NAME
+    };
   }
 };
 </script>
@@ -24,6 +33,13 @@ export default {
 
 .loading-icon {
   animation: blurFade 2.5s ease-in-out infinite;
+}
+
+.loading-brand-logo {
+  display: block;
+  height: auto;
+  margin-right: 5px;
+  object-fit: contain;
 }
 
 @keyframes blurFade {

@@ -3,7 +3,7 @@
     <div class="logo-header-container">
       <div class="left">
         <span class="product-title-frame">
-          <img class="product-title" :src="headerTitleUrl" alt="CloudDM" />
+          <img class="product-title" :src="headerTitleUrl" :alt="brandName" />
         </span>
         <div class="login-type">
           {{ headerTypeText }}
@@ -22,7 +22,7 @@
 
 <script>
 import LangSwitcher from '@/components/LangSwitcher';
-import logoClouddm from '@/assets/logo-clouddm.svg';
+import { BRAND_LOGO_URL, BRAND_NAME } from '@/const/brand';
 
 export default {
   name: 'DmLogoHeader',
@@ -41,7 +41,7 @@ export default {
       return this.$store.state.theme || 'light';
     },
     headerTitleUrl() {
-      return logoClouddm;
+      return BRAND_LOGO_URL;
     },
     headerTypeText() {
       return this.title || this.TYPES[this.type] || '';
@@ -52,6 +52,7 @@ export default {
   },
   data() {
     return {
+      brandName: BRAND_NAME,
       currentLang: localStorage.getItem('lang') || this.$i18n.global.locale.value,
       TYPES: {
         register: this.$t('zhu-ce'),
@@ -99,7 +100,7 @@ export default {
 
     .product-title-frame {
       width: 184px;
-      height: 32px;
+      height: 56px;
       flex: 0 0 184px;
       display: inline-flex;
       align-items: center;
@@ -109,7 +110,7 @@ export default {
 
     .product-title {
       width: 184px;
-      height: 32px;
+      height: 56px;
       display: block;
       object-fit: contain;
       object-position: center;

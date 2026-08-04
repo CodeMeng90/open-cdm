@@ -29,7 +29,7 @@ export default {
     },
     loadingLogo: {
       type: String,
-      default: 'icon-v2-logo-DM'
+      default: ''
     },
     link: {
       type: String,

@@ -7,7 +7,7 @@
         <div v-if="isSqlRoute" key="sql" class="sql-layout">
           <header class="sql-compact-header">
             <div class="sql-compact-header__brand" @click="handleGoAppHome">
-              <AppBrandLogo />
+              <AppBrandLogo compact />
               <span class="sql-compact-header__title">{{ $t('sql-cha-xun') }}</span>
             </div>
             <div class="sql-compact-header__actions">

@@ -1,11 +1,11 @@
 <template>
   <div class="app-brand-logo" :class="{ 'app-brand-logo--compact': compact }">
-    <img :src="logoClouddm" class="app-brand-logo__img" alt="CloudDM" />
+    <img :src="brandLogoUrl" class="app-brand-logo__img" :alt="brandName" />
   </div>
 </template>
 
 <script>
-import logoClouddm from '@/assets/logo-clouddm.svg';
+import { BRAND_LOGO_URL, BRAND_NAME } from '@/const/brand';
 
 export default {
   name: 'AppBrandLogo',
@@ -17,7 +17,8 @@ export default {
   },
   data() {
     return {
-      logoClouddm
+      brandLogoUrl: BRAND_LOGO_URL,
+      brandName: BRAND_NAME
     };
   }
 };
@@ -27,33 +28,23 @@ export default {
 .app-brand-logo {
   display: flex;
   align-items: center;
+  width: 160px;
+  height: 49px;
+  flex: 0 1 160px;
   min-width: 0;
-  color: #222222;
 
   &__img {
-    height: 22px;
-    width: auto;
-    max-width: 130px;
     display: block;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
     object-position: left center;
   }
 
   &--compact {
-    color: #222222;
-
-    .app-brand-logo__img {
-      height: 18px;
-      max-width: 110px;
-    }
-  }
-}
-
-[data-theme='dark'] .app-brand-logo {
-  color: #fafafa;
-
-  .app-brand-logo__img {
-    filter: brightness(0) invert(1);
+    width: 92px;
+    height: 28px;
+    flex-basis: 92px;
   }
 }
 </style>
