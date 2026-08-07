@@ -305,7 +305,7 @@ public class LoginMFAServiceImpl implements LoginMFAService {
 
     private byte[] genCcTotpUriQrCodePicture(String code, String account) {
         try {
-            String totpUri = MessageFormat.format(ccTotpUriFormat, account, code, "CloudDM");
+            String totpUri = MessageFormat.format(ccTotpUriFormat, account, code, "LinkDM");
             QRCodeWriter qrw = new QRCodeWriter();
             BitMatrix matrix = qrw.encode(totpUri, BarcodeFormat.QR_CODE, 200, 200);
 

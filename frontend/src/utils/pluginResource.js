@@ -23,6 +23,6 @@ export const setPageIcon = (iconUrl, type = 'image/x-icon') => {
   });
 };
 
-export const WEBSIDE_FAVICON = getPluginResourceUrl('webside/favicon.ico');
+export const WEBSIDE_FAVICON = getPluginResourceUrl('webside/favicon.ico', { v: 'linkdm-favicon-1' });
 export const WEBSIDE_LOGO_LOGIN = getPluginResourceUrl('webside/logo_login');
 export const WEBSIDE_LOGO_HEADER = getPluginResourceUrl('webside/logo_header');

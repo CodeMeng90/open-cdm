@@ -260,6 +260,7 @@ import AppPageTabs from '@/components/layout/AppPageTabs';
 import { mapGetters, mapMutations, mapState } from 'vuex';
 import { encryptMixin } from '@/mixins/encryptMixin';
 import { UPDATE_USERINFO } from '@/store/mutationTypes';
+import { PRODUCT_NAME } from '@/const/brand';
 
 const DEFAULT_PASSWORD_MIN_LENGTH = 8;
 const MFA_SETTING_EXPIRE_MS = 10 * 60 * 1000;
@@ -776,7 +777,7 @@ export default {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `clouddm-mfacode-${username}.txt`;
+      link.download = `${PRODUCT_NAME.toLowerCase()}-mfacode-${username}.txt`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

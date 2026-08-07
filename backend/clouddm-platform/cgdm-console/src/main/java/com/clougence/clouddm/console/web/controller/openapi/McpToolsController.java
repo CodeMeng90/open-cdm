@@ -90,7 +90,7 @@ public class McpToolsController extends BasicApi implements UnifiedPostConstruct
         this.toolApi = Collections.unmodifiableMap(api);
         this.toolsListResult = new ToolsListResult(Collections.unmodifiableList(tools), null);
 
-        InitializeResult.ServerInfo serverInfo = new InitializeResult.ServerInfo("CloudDM-MCP", "1.0.0");
+        InitializeResult.ServerInfo serverInfo = new InitializeResult.ServerInfo("LinkDM-MCP", "1.0.0");
         InitializeResult.Tools capabilitiesTools = new InitializeResult.Tools(true);
         InitializeResult.Capabilities capabilities = new InitializeResult.Capabilities(capabilitiesTools);
         this.initResult = new InitializeResult("2025-06-18", capabilities, serverInfo);

@@ -18,6 +18,7 @@ import { createWebSocket, hasWebSocketInstance } from '@/services/socket';
 import { services } from '@/services/http';
 import { filterGlobalSettingByBuild, supportsCloudCanalBuild, supportsCloudDMBuild } from '@/utils/product';
 import { setPageIcon, WEBSIDE_FAVICON } from '@/utils/pluginResource';
+import { PRODUCT_NAME } from '@/const/brand';
 
 const initWebsocket = (globalSetting, loggedIn) => {
   if (hasWebSocketInstance()) {
@@ -98,7 +99,7 @@ export default {
       let title = '';
       if (supportsCloudDMBuild && !supportsCloudCanalBuild) {
         icon_url = WEBSIDE_FAVICON;
-        title = 'CloudDM';
+        title = PRODUCT_NAME;
       }
       if (supportsCloudDMBuild && supportsCloudCanalBuild) {
         icon_url = '/rdp.ico';
