@@ -4,7 +4,7 @@
 
 **Goal:** Replace every active CloudDM wordmark with the supplied LinkBackup image, build a matching `clouddm-js.jar`, deploy it first to the designated CloudDM 4.0.1 validation host, and produce a versioned Docker image that can be reused on later hosts.
 
-**Architecture:** Store one cropped, transparent PNG in `frontend/public/assets/img/` and expose its deployment-safe URL through one frontend constant. Vue-rendered logos and both startup loaders use that same asset. Package the rebuilt frontend JAR as a thin Docker layer over the official CloudDM 4.0.1 image, preserving the base image entrypoint and runtime behavior.
+**Architecture:** Store one cropped, transparent PNG in `frontend/public/assets/img/` and expose its deployment-safe URL through one frontend constant. Vue-rendered logos and both startup loaders use that same asset. Package the rebuilt frontend, console, and inner-website JARs as a thin Docker layer over the matching CloudDM 4.0.1 image, preserving the base image entrypoint and runtime behavior.
 
 **Tech Stack:** Vue 3, Vue CLI 5, Less, Node.js 22.22.1, Gradle, JDK 17+, Docker, PowerShell, SSH.
 
@@ -18,7 +18,7 @@
 - Do not commit `frontend/node_modules/`, `frontend/dist/`, `frontend/build/`, `package/build/`, image archives, logs, or server backups.
 - Keep the existing production container stopped but intact after a successful cutover until browser acceptance is complete.
 - The expected interruption is the old-container stop plus new-container startup, normally about one to three minutes. Image construction and backup happen before that interruption.
-- The branded JAR and image are tied to CloudDM `4.0.1`. Rebuild against the matching source and base image for every future CloudDM version.
+- The branded JARs and image are tied to CloudDM `4.0.1`. Rebuild against the matching source and base image for every future CloudDM version.
 
 ## Expected Repository Changes
 
@@ -352,6 +352,8 @@ Expected: LinkBackup is referenced, no active source path uses the old logo, and
 
 - Create: `package/docker/alone-branding.Dockerfile`
 - Generated locally only: `package/build/linkbackup/clouddm-js.jar`
+- Generated locally only: `package/build/linkbackup/cgdm-console-4.0.1.jar`
+- Generated locally only: `package/build/linkbackup/inner-website-lib.jar`
 
 - [x] **Step 1: Add the thin overlay Dockerfile**
 
@@ -362,22 +364,30 @@ ARG BASE_IMAGE=cloudcanal-registry.cn-shanghai.cr.aliyuncs.com/clougence/cgdm-al
 FROM ${BASE_IMAGE}
 
 COPY --chown=root:root clouddm-js.jar /root/cgdm/alone/libs/clouddm-js.jar
+COPY --chown=root:root cgdm-console-4.0.1.jar /root/cgdm/alone/libs/cgdm-console-4.0.1.jar
+COPY --chown=root:root inner-website-lib.jar /root/cgdm/alone/plugins/inner-website-lib.jar
 ```
 
-The overlay inherits the official image's entrypoint, defaults, database runtime, and architecture while replacing only the frontend JAR.
+The overlay inherits the base image's entrypoint, defaults, database runtime, and architecture while replacing the frontend, console, and inner-website JARs. Build all three JARs and the base image from matching release source; a matching version string alone does not guarantee compatibility with later upstream changes.
 
 - [x] **Step 2: Prepare an ignored build context**
 
 ```powershell
+Push-Location backend
+.\gradlew.bat -Pprofile=dev -Ptarget=none -PbuildFrontend=true :cgdm-web:jar :cgdm-console:jar :inner-website:customFatJar
+Pop-Location
+
 $brandingContext = 'package\build\linkbackup'
 New-Item -ItemType Directory -Force $brandingContext | Out-Null
 Copy-Item -LiteralPath 'frontend\build\libs\clouddm-js.jar' -Destination "$brandingContext\clouddm-js.jar" -Force
+Copy-Item -LiteralPath 'backend\clouddm-platform\cgdm-console\build\libs\cgdm-console-4.0.1.jar' -Destination "$brandingContext\cgdm-console-4.0.1.jar" -Force
+Copy-Item -LiteralPath 'backend\clouddm-plugins\clouddm-inner\inner-website\build\libs\inner-website-lib.jar' -Destination "$brandingContext\inner-website-lib.jar" -Force
 Copy-Item -LiteralPath 'package\docker\alone-branding.Dockerfile' -Destination "$brandingContext\alone-branding.Dockerfile" -Force
-Get-FileHash "$brandingContext\clouddm-js.jar" -Algorithm SHA256
+Get-FileHash "$brandingContext\*.jar" -Algorithm SHA256
 git status --short
 ```
 
-Expected: the copied JAR hash matches Task 4 and `package/build/` remains absent from Git status.
+Expected: all three JARs are present with SHA-256 hashes, the frontend JAR hash matches Task 4, and `package/build/` remains absent from Git status.
 
 - [x] **Step 3: Validate the Dockerfile diff**
 
@@ -386,7 +396,7 @@ git diff --check
 git diff -- package/docker/alone-branding.Dockerfile
 ```
 
-Expected: the image layer changes only `/root/cgdm/alone/libs/clouddm-js.jar`.
+Expected: the image layer replaces only `/root/cgdm/alone/libs/clouddm-js.jar`, `/root/cgdm/alone/libs/cgdm-console-4.0.1.jar`, and `/root/cgdm/alone/plugins/inner-website-lib.jar`.
 
 ---
 
@@ -428,14 +438,17 @@ Expected baseline: official `cgdm-alone:4.0.1`, restart policy `always`, port `8
 ssh $deployTarget "install -d -m 700 '$remoteRelease' '$remoteBackup'"
 ```
 
-- [x] **Step 4: Upload the JAR and Dockerfile, then compare checksums**
+- [x] **Step 4: Upload all three JARs and the Dockerfile, then compare checksums**
 
 ```powershell
-scp 'package\build\linkbackup\clouddm-js.jar' "${deployTarget}:${remoteRelease}/clouddm-js.jar"
+foreach ($jarName in @('clouddm-js.jar', 'cgdm-console-4.0.1.jar', 'inner-website-lib.jar')) {
+    $localJar = Join-Path 'package\build\linkbackup' $jarName
+    scp $localJar "${deployTarget}:${remoteRelease}/$jarName"
+    $localJarHash = (Get-FileHash $localJar -Algorithm SHA256).Hash.ToLowerInvariant()
+    $remoteJarHash = (ssh $deployTarget "sha256sum '$remoteRelease/$jarName' | cut -d' ' -f1").Trim()
+    if ($localJarHash -ne $remoteJarHash) { throw "Uploaded JAR checksum mismatch: $jarName" }
+}
 scp 'package\docker\alone-branding.Dockerfile' "${deployTarget}:${remoteRelease}/alone-branding.Dockerfile"
-$localJarHash = (Get-FileHash 'package\build\linkbackup\clouddm-js.jar' -Algorithm SHA256).Hash.ToLowerInvariant()
-$remoteJarHash = (ssh $deployTarget "sha256sum '$remoteRelease/clouddm-js.jar' | cut -d' ' -f1").Trim()
-if ($localJarHash -ne $remoteJarHash) { throw 'Uploaded JAR checksum mismatch' }
 ```
 
 - [x] **Step 5: Capture rollback material without displaying environment values**
@@ -658,18 +671,18 @@ gzip -dc linkbackup-cgdm-alone-4.0.1-linkbackup.1-amd64.tar.gz | docker load
 docker image inspect linkbackup/cgdm-alone:4.0.1-linkbackup.1
 ```
 
-Use the loaded image as a drop-in replacement for the official `4.0.1` image while preserving that host's own environment, ports, networks, and volumes. For a different CPU architecture, rebuild the thin overlay on that architecture from the same JAR and Dockerfile instead of loading this amd64 archive.
+Use the loaded image as a drop-in replacement for the matching `4.0.1` image while preserving that host's own environment, ports, networks, and volumes. For a different CPU architecture, rebuild the thin overlay on that architecture from the same three JARs and Dockerfile instead of loading this amd64 archive.
 
 - [x] **Step 3: Apply the version-matching rule to future upgrades**
 
 For CloudDM `4.0.2` or any later release:
 
 1. Rebase or merge the branding branch onto that release's source.
-2. Re-run Tasks 1 through 5 to produce the matching `clouddm-js-<version>.jar`.
-3. Change `BASE_IMAGE` and the custom image tag to the same CloudDM version.
+2. Re-run Tasks 1 through 5 to produce matching `clouddm-js.jar`, `cgdm-console-<version>.jar`, and `inner-website-lib.jar` artifacts.
+3. Change `BASE_IMAGE`, the custom image tag, and the console JAR source and destination filenames in the Dockerfile to the same CloudDM version.
 4. Validate on one host before wider rollout.
 
-Never place the `4.0.1` frontend JAR into a different CloudDM base version.
+Never place any of the `4.0.1` branding JARs into a different CloudDM base version.
 
 ---
 
