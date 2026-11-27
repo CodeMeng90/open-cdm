@@ -102,9 +102,9 @@ public class QueryApi {
             DmApiQueryResultVO r = future.get(DEFAULT_QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
             return ResWebDataUtils.buildSuccess(r);
         } catch (TimeoutException e) {
-            return ResWebDataUtils.buildError("Query timeout(" + DEFAULT_QUERY_TIMEOUT_SEC + " sec) in CloudDM");
+            return ResWebDataUtils.buildError("Query timeout(" + DEFAULT_QUERY_TIMEOUT_SEC + " sec) in LinkDM");
         } catch (InterruptedException e) {
-            return ResWebDataUtils.buildError("Query interrupted in CloudDM");
+            return ResWebDataUtils.buildError("Query interrupted in LinkDM");
         } catch (Exception e) {
             Throwable root = e;
             if (e instanceof ExecutionException) {
@@ -115,7 +115,7 @@ public class QueryApi {
 
             StringWriter sw = new StringWriter();
             root.printStackTrace(new PrintWriter(sw));
-            return ResWebDataUtils.buildError("Query Error in CloudDM, Message:" + sw);
+            return ResWebDataUtils.buildError("Query Error in LinkDM, Message:" + sw);
         }
     }
 

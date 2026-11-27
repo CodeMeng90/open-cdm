@@ -3,13 +3,14 @@
 </template>
 <script>
 import { mapState } from 'vuex';
+import { PRODUCT_NAME } from '@/const/brand';
 
 export default {
   name: 'DmWaterMark',
   props: {
     inputText: {
       type: String,
-      default: 'clouddm'
+      default: PRODUCT_NAME
     },
     inputAllowDele: {
       type: Boolean,

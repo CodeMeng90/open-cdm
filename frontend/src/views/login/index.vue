@@ -182,6 +182,7 @@ import formatError from '@/services/formatError';
 import { setPageIcon, WEBSIDE_FAVICON } from '@/utils/pluginResource';
 import loginBgPattern from '@/assets/login/login-bg-pattern.svg';
 import Toast from '@/utils/toast';
+import { PRODUCT_NAME } from '@/const/brand';
 
 export default {
   name: 'Login',
@@ -580,7 +581,7 @@ export default {
       }
 
       setPageIcon(WEBSIDE_FAVICON);
-      document.title = 'CloudDM';
+      document.title = PRODUCT_NAME;
       this.$store.dispatch('setTheme', 'light');
       this.applyCallbackQuery();
     }
